@@ -41,6 +41,12 @@ namespace System.Runtime.CompilerServices
             }
         }
 
+        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+        public static T As<T>(object o)
+        {
+            return UnsafeHelper.As<T>(o);
+        }
+
         [CLSCompliant(false)]
         [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
         public static unsafe void* AsPointer<T>(ref T value)

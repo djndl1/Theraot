@@ -53,6 +53,28 @@ namespace System.Runtime.CompilerServices
             return method.CreateDelegate(typeof(AsPointerDelegate<>).MakeGenericType(type));
         }
     }
+
+    internal static partial class UnsafeHelper
+    {
+        private static readonly CacheDict<Type, Delegate> _asT = new(CreateAsTDelegate, 256);
+
+        private delegate T AsTDelegate<T>(object o);
+
+        public static T As<T>(object o)
+        {
+            return ((AsTDelegate<T>)_asT[typeof(T)])(o);
+        }
+
+        private static Delegate CreateAsTDelegate(Type type)
+        {
+            Type[] methodArgs = { typeof(object) };
+            var method = new DynamicMethod(nameof(As), type, methodArgs);
+            var il = method.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ret);
+            return method.CreateDelegate(typeof(AsTDelegate<>).MakeGenericType(type));
+        }
+    }
 }
 
 #endif
