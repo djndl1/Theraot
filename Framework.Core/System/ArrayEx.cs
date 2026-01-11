@@ -10,29 +10,46 @@ using Theraot.Collections.ThreadSafe;
 
 namespace System
 {
+#if !NET60_OR_GREATER
+    public static partial class ArrayEx
+    {
+        extension(Array)
+        {
+            [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+            public static void Clear(Array array)
+            {
+                Array.Clear(array, 0, array.Length);
+            }
+        }
+    }
+#endif
+
 #if LESSTHAN_NET46 || LESSTHAN_NETSTANDARD13
 
     public static partial class ArrayEx
     {
         private static readonly CacheDict<Type, Array> _emptyArrays = new(256);
 
-        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-        public static T[] Empty<T>()
+        extension(Array)
         {
-            var type = typeof(T);
-            if (type == typeof(Type))
+            [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+            public static T[] Empty<T>()
             {
-                return (T[])(object)TypeEx.EmptyTypes;
-            }
+                var type = typeof(T);
+                if (type == typeof(Type))
+                {
+                    return (T[])(object)TypeEx.EmptyTypes;
+                }
 
-            if (_emptyArrays.TryGetValue(type, out var array))
-            {
-                return (T[])array;
-            }
+                if (_emptyArrays.TryGetValue(type, out var array))
+                {
+                    return (T[])array;
+                }
 
-            var result = new T[0];
-            _emptyArrays[type] = result;
-            return result;
+                var result = new T[0];
+                _emptyArrays[type] = result;
+                return result;
+            }
         }
     }
 
@@ -40,10 +57,13 @@ namespace System
 
     public static partial class ArrayEx
     {
-        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-        public static T[] Empty<T>()
+        extension(Array)
         {
-            return Array.Empty<T>();
+            [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+            public static T[] Empty<T>()
+            {
+                return Array.Empty<T>();
+            }
         }
     }
 
@@ -51,10 +71,12 @@ namespace System
 
     public static partial class ArrayEx
     {
-        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-        [return: NotNull]
-        public static ReadOnlyCollection<T> AsReadOnly<T>(T[] array)
+        extension(Array)
         {
+            [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+            [return: NotNull]
+            public static ReadOnlyCollection<T> AsReadOnly<T>(T[] array)
+            {
 #if LESSTHAN_NETCOREAPP20 || LESSTHAN_NETSTANDARD20
             if (array == null)
             {
@@ -63,14 +85,14 @@ namespace System
 
             return new ReadOnlyCollection<T>(array);
 #else
-            return Array.AsReadOnly(array);
+                return Array.AsReadOnly(array);
 #endif
-        }
+            }
 
-        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-        [return: NotNull]
-        public static TOutput[] ConvertAll<TInput, TOutput>(TInput[] array, Converter<TInput, TOutput> converter)
-        {
+            [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+            [return: NotNull]
+            public static TOutput[] ConvertAll<TInput, TOutput>(TInput[] array, Converter<TInput, TOutput> converter)
+            {
 #if LESSTHAN_NETCOREAPP20 || LESSTHAN_NETSTANDARD20
             if (array == null)
             {
@@ -90,13 +112,13 @@ namespace System
 
             return newArray;
 #else
-            return Array.ConvertAll(array, converter);
+                return Array.ConvertAll(array, converter);
 #endif
-        }
+            }
 
-        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-        public static void Copy(Array sourceArray, Array destinationArray, long length)
-        {
+            [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+            public static void Copy(Array sourceArray, Array destinationArray, long length)
+            {
 #if LESSTHAN_NETCOREAPP20 || LESSTHAN_NETSTANDARD20
             if (length > int.MaxValue || length < int.MinValue)
             {
@@ -105,13 +127,13 @@ namespace System
 
             Array.Copy(sourceArray, destinationArray, (int)length);
 #else
-            Array.Copy(sourceArray, destinationArray, length);
+                Array.Copy(sourceArray, destinationArray, length);
 #endif
-        }
+            }
 
-        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-        public static void Copy(Array sourceArray, long sourceIndex, Array destinationArray, long destinationIndex, long length)
-        {
+            [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+            public static void Copy(Array sourceArray, long sourceIndex, Array destinationArray, long destinationIndex, long length)
+            {
 #if LESSTHAN_NETCOREAPP20 || LESSTHAN_NETSTANDARD20
             if (sourceIndex > int.MaxValue || sourceIndex < int.MinValue)
             {
@@ -130,31 +152,31 @@ namespace System
 
             Array.Copy(sourceArray, (int)sourceIndex, destinationArray, (int)destinationIndex, (int)length);
 #else
-            Array.Copy(sourceArray, sourceIndex, destinationArray, destinationIndex, length);
+                Array.Copy(sourceArray, sourceIndex, destinationArray, destinationIndex, length);
 #endif
-        }
+            }
 
-        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-        public static void Fill<T>(T[] array, T value)
-        {
+            [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+            public static void Fill<T>(T[] array, T value)
+            {
 #if TARGETS_NET || LESSTHAN_NETCOREAPP20 || LESSTHAN_NETSTANDARD21
-            if (array == null)
-            {
-                throw new ArgumentNullException(nameof(array));
-            }
+                if (array == null)
+                {
+                    throw new ArgumentNullException(nameof(array));
+                }
 
-            for (int index = 0; index < array.Length; index++)
-            {
-                array[index] = value;
-            }
+                for (int index = 0; index < array.Length; index++)
+                {
+                    array[index] = value;
+                }
 #else
             Array.Fill(array, value);
 #endif
-        }
+            }
 
-        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-        public static void ForEach<T>(T[] array, Action<T> action)
-        {
+            [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+            public static void ForEach<T>(T[] array, Action<T> action)
+            {
 #if LESSTHAN_NETCOREAPP20 || LESSTHAN_NETSTANDARD20
             if (array == null)
             {
@@ -171,8 +193,9 @@ namespace System
                 action(item);
             }
 #else
-            Array.ForEach(array, action);
+                Array.ForEach(array, action);
 #endif
+            }
         }
     }
 }
