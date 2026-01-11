@@ -178,3 +178,6 @@ package/
 
 # Roslyn Analyzers
 Framework.Core/*.analyzers.csproj
+tags
+tags.lock
+tags.temp
