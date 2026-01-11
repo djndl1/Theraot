@@ -7,590 +7,600 @@ namespace System
 {
     public static partial class StringEx
     {
-        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-        public static string Concat(IEnumerable<string> values)
+        extension(string)
         {
+            [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+            public static string Concat(IEnumerable<string> values)
+            {
 #if LESSTHAN_NET40
-            if (values == null)
-            {
-                throw new ArgumentNullException(nameof(values));
-            }
+                if (values == null)
+                {
+                    throw new ArgumentNullException(nameof(values));
+                }
 
-            var stringList = new List<string>();
-            var length = 0;
-            foreach (var item in values)
-            {
-                stringList.Add(item);
-                length += item.Length;
-            }
+                var stringList = new List<string>();
+                var length = 0;
+                foreach (var item in values)
+                {
+                    stringList.Add(item);
+                    length += item.Length;
+                }
 
-            return ConcatExtractedExtracted(stringList.ToArray(), 0, stringList.Count, length);
+                return ConcatExtractedExtracted(stringList.ToArray(), 0, stringList.Count, length);
 #else
             return string.Concat(values);
 #endif
-        }
-
-        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-        public static string Concat<T>(IEnumerable<T> values)
-        {
-#if LESSTHAN_NET40
-            if (values == null)
-            {
-                throw new ArgumentNullException(nameof(values));
             }
 
-            var stringList = new List<string>();
-            var length = 0;
-            foreach (var item in values)
+            [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+            public static string Concat<T>(IEnumerable<T> values)
             {
-                if (item is null)
+#if LESSTHAN_NET40
+                if (values == null)
                 {
-                    continue;
+                    throw new ArgumentNullException(nameof(values));
                 }
 
-                var itemToString = item.ToString();
-                stringList.Add(itemToString);
-                length += itemToString.Length;
-            }
+                var stringList = new List<string>();
+                var length = 0;
+                foreach (var item in values)
+                {
+                    if (item is null)
+                    {
+                        continue;
+                    }
 
-            return ConcatExtractedExtracted(stringList.ToArray(), 0, stringList.Count, length);
+                    var itemToString = item.ToString();
+                    stringList.Add(itemToString);
+                    length += itemToString.Length;
+                }
+
+                return ConcatExtractedExtracted(stringList.ToArray(), 0, stringList.Count, length);
 #else
             return string.Concat(values);
 #endif
-        }
-
-        public static string Concat<T>(IEnumerable<T> values, Func<T, string> converter)
-        {
-            if (values == null)
-            {
-                throw new ArgumentNullException(nameof(values));
             }
 
-            if (converter == null)
+            public static string Concat<T>(IEnumerable<T> values, Func<T, string> converter)
             {
-                throw new ArgumentNullException(nameof(converter));
-            }
-
-            var stringList = new List<string>();
-            var length = 0;
-            foreach (var item in values)
-            {
-                var itemToString = converter.Invoke(item);
-                stringList.Add(itemToString);
-                length += itemToString.Length;
-            }
-
-            return ConcatExtractedExtracted(stringList.ToArray(), 0, stringList.Count, length);
-        }
-
-        public static string Concat(object[] array, int arrayIndex)
-        {
-            if (array == null)
-            {
-                throw new ArgumentNullException(nameof(array));
-            }
-
-            if (arrayIndex < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Non-negative number is required.");
-            }
-
-            return arrayIndex == array.Length ? string.Empty : ConcatExtracted(array, arrayIndex, array.Length - arrayIndex);
-        }
-
-        public static string Concat(object[] array, int arrayIndex, int countLimit)
-        {
-            if (array == null)
-            {
-                throw new ArgumentNullException(nameof(array));
-            }
-
-            if (arrayIndex < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Non-negative number is required.");
-            }
-
-            if (countLimit < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(countLimit), "Non-negative number is required.");
-            }
-
-            if (countLimit > array.Length - arrayIndex)
-            {
-                throw new ArgumentException("startIndex plus countLimit is greater than the number of elements in array.", nameof(array));
-            }
-
-            return arrayIndex == array.Length ? string.Empty : ConcatExtracted(array, arrayIndex, countLimit);
-        }
-
-        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-        public static string Concat(params object[] values)
-        {
-            return string.Concat(values);
-        }
-
-        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-        public static string Concat(params string[] value)
-        {
-            return string.Concat(value);
-        }
-
-        public static string Concat(string[] array, int arrayIndex)
-        {
-            if (array == null)
-            {
-                throw new ArgumentNullException(nameof(array));
-            }
-
-            if (arrayIndex < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Non-negative number is required.");
-            }
-
-            return arrayIndex == array.Length ? string.Empty : ConcatExtracted(array, arrayIndex, array.Length - arrayIndex);
-        }
-
-        public static string Concat(string[] array, int arrayIndex, int countLimit)
-        {
-            if (array == null)
-            {
-                throw new ArgumentNullException(nameof(array));
-            }
-
-            if (arrayIndex < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Non-negative number is required.");
-            }
-
-            if (countLimit < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(countLimit), "Non-negative number is required.");
-            }
-
-            if (countLimit > array.Length - arrayIndex)
-            {
-                throw new ArgumentException("startIndex plus countLimit is greater than the number of elements in array.", nameof(array));
-            }
-
-            return arrayIndex == array.Length ? string.Empty : ConcatExtracted(array, arrayIndex, countLimit);
-        }
-
-        private static string ConcatExtracted(object[] array, int startIndex, int count)
-        {
-            var length = 0;
-            var maxIndex = startIndex + count;
-            var newArray = new string[count];
-            for (var index = startIndex; index < maxIndex; index++)
-            {
-                var item = array[index];
-
-                var itemToString = item?.ToString();
-                if (itemToString == null)
+                if (values == null)
                 {
-                    continue;
+                    throw new ArgumentNullException(nameof(values));
                 }
 
-                newArray[index - startIndex] = itemToString;
-                length += itemToString.Length;
-            }
-
-            return ConcatExtractedExtracted(newArray, 0, count, length);
-        }
-
-        private static string ConcatExtracted(string[] array, int startIndex, int count)
-        {
-            var length = 0;
-            var maxIndex = startIndex + count;
-            for (var index = startIndex; index < maxIndex; index++)
-            {
-                var item = array[index];
-                if (item is null)
+                if (converter == null)
                 {
-                    continue;
+                    throw new ArgumentNullException(nameof(converter));
                 }
 
-                length += item.Length;
+                var stringList = new List<string>();
+                var length = 0;
+                foreach (var item in values)
+                {
+                    var itemToString = converter.Invoke(item);
+                    stringList.Add(itemToString);
+                    length += itemToString.Length;
+                }
+
+                return ConcatExtractedExtracted(stringList.ToArray(), 0, stringList.Count, length);
             }
 
-            return ConcatExtractedExtracted(array, startIndex, maxIndex, length);
-        }
-
-        private static string ConcatExtractedExtracted(string[] array, int startIndex, int maxIndex, int length)
-        {
-            if (length <= 0)
+            public static string Concat(object[] array, int arrayIndex)
             {
-                return string.Empty;
+                if (array == null)
+                {
+                    throw new ArgumentNullException(nameof(array));
+                }
+
+                if (arrayIndex < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Non-negative number is required.");
+                }
+
+                return arrayIndex == array.Length ? string.Empty : ConcatExtracted(array, arrayIndex, array.Length - arrayIndex);
             }
 
-            var result = new StringBuilder(length);
-            for (var index = startIndex; index < maxIndex; index++)
+            public static string Concat(object[] array, int arrayIndex, int countLimit)
             {
-                var item = array[index];
-                result.Append(item);
+                if (array == null)
+                {
+                    throw new ArgumentNullException(nameof(array));
+                }
+
+                if (arrayIndex < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Non-negative number is required.");
+                }
+
+                if (countLimit < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(countLimit), "Non-negative number is required.");
+                }
+
+                if (countLimit > array.Length - arrayIndex)
+                {
+                    throw new ArgumentException("startIndex plus countLimit is greater than the number of elements in array.", nameof(array));
+                }
+
+                return arrayIndex == array.Length ? string.Empty : ConcatExtracted(array, arrayIndex, countLimit);
             }
 
-            return result.ToString();
-        }
-    }
-
-    public static partial class StringEx
-    {
-        public static string Implode(string separator, IEnumerable<string> values)
-        {
-            if (values == null)
-            {
-                throw new ArgumentNullException(nameof(values));
-            }
-
-            if (separator == null)
-            {
-                return Concat(values);
-            }
-
-            var stringList = values.ToList();
-            return ImplodeExtracted(separator, stringList.ToArray(), 0, stringList.Count);
-        }
-
-        public static string Implode(string separator, IEnumerable<string> values, string start, string end)
-        {
-            if (values == null)
-            {
-                throw new ArgumentNullException(nameof(values));
-            }
-
-            if (separator == null)
-            {
-                return Concat(values);
-            }
-
-            var stringList = values.ToList();
-
-            if (stringList.Count == 0)
-            {
-                return string.Empty;
-            }
-
-            start ??= string.Empty;
-            end ??= string.Empty;
-            return start + ImplodeExtracted(separator, stringList.ToArray(), 0, stringList.Count) + end;
-        }
-
-        public static string Implode<T>(string separator, IEnumerable<T> values)
-        {
-            if (values == null)
-            {
-                throw new ArgumentNullException(nameof(values));
-            }
-
-            if (separator == null)
-            {
-                return Concat(values);
-            }
-
-            var stringList = values.Select(item => item?.ToString()).ToList();
-            return ImplodeExtracted(separator, stringList.ToArray(), 0, stringList.Count);
-        }
-
-        public static string Implode<T>(string separator, IEnumerable<T> values, Func<T, string> converter)
-        {
-            if (converter == null)
-            {
-                throw new ArgumentNullException(nameof(converter));
-            }
-
-            if (values == null)
-            {
-                throw new ArgumentNullException(nameof(values));
-            }
-
-            if (separator == null)
-            {
-                return Concat(values, converter);
-            }
-
-            var stringList = values.Select(item => item?.ToString()).ToList();
-            return ImplodeExtracted(separator, stringList.ToArray(), 0, stringList.Count);
-        }
-
-        public static string Implode<T>(string separator, IEnumerable<T> values, Func<T, string> converter, string start, string end)
-        {
-            if (converter == null)
-            {
-                throw new ArgumentNullException(nameof(converter));
-            }
-
-            if (values == null)
-            {
-                throw new ArgumentNullException(nameof(values));
-            }
-
-            if (separator == null)
-            {
-                return Concat(values, converter);
-            }
-
-            var stringList = values.Select(item => item?.ToString()).ToList();
-
-            if (stringList.Count == 0)
-            {
-                return string.Empty;
-            }
-
-            start ??= string.Empty;
-            end ??= string.Empty;
-            return start + ImplodeExtracted(separator, stringList.ToArray(), 0, stringList.Count) + end;
-        }
-
-        public static string Implode<T>(string separator, IEnumerable<T> values, string start, string end)
-        {
-            if (values == null)
-            {
-                throw new ArgumentNullException(nameof(values));
-            }
-
-            if (separator == null)
-            {
-                return Concat(values);
-            }
-
-            var stringList = values.Select(item => item?.ToString()).ToList();
-
-            if (stringList.Count == 0)
-            {
-                return string.Empty;
-            }
-
-            start ??= string.Empty;
-            end ??= string.Empty;
-            return start + ImplodeExtracted(separator, stringList.ToArray(), 0, stringList.Count) + end;
-        }
-
-        public static string Implode(string separator, object[] array, int arrayIndex)
-        {
-            if (array == null)
-            {
-                throw new ArgumentNullException(nameof(array));
-            }
-
-            if (arrayIndex < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Non-negative number is required.");
-            }
-
-            if (arrayIndex == array.Length)
-            {
-                return string.Empty;
-            }
-
-            return ImplodeExtracted(separator ?? string.Empty, array, arrayIndex, array.Length - arrayIndex);
-        }
-
-        public static string Implode(string separator, object[] array, int arrayIndex, int countLimit)
-        {
-            if (array == null)
-            {
-                throw new ArgumentNullException(nameof(array));
-            }
-
-            if (arrayIndex < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Non-negative number is required.");
-            }
-
-            if (countLimit < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(countLimit), "Non-negative number is required.");
-            }
-
-            if (countLimit > array.Length - arrayIndex)
-            {
-                throw new ArgumentException("The array can not contain the number of elements.", nameof(array));
-            }
-
-            if (arrayIndex == array.Length)
-            {
-                return string.Empty;
-            }
-
-            return ImplodeExtracted(separator ?? string.Empty, array, arrayIndex, countLimit);
-        }
-
-        public static string Implode(string separator, params object[] values)
-        {
-            if (separator == null)
+            [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+            public static string Concat(params object[] values)
             {
                 return string.Concat(values);
             }
 
-            if (values == null)
+            [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+            public static string Concat(params string[] value)
             {
-                throw new ArgumentNullException(nameof(values));
+                return string.Concat(value);
             }
 
-            var array = new string?[values.Length];
-            var index = 0;
-            foreach (var item in values)
+            public static string Concat(string[] array, int arrayIndex)
             {
-                array[index++] = item?.ToString();
-            }
-
-            return ImplodeExtracted(separator, array, 0, array.Length);
-        }
-
-        public static string Implode(string separator, params string[] value)
-        {
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            return ImplodeExtracted(separator ?? string.Empty, value, 0, value.Length);
-        }
-
-        public static string Implode(string separator, string[] array, int arrayIndex)
-        {
-            if (array == null)
-            {
-                throw new ArgumentNullException(nameof(array));
-            }
-
-            if (arrayIndex < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Non-negative number is required.");
-            }
-
-            if (arrayIndex == array.Length)
-            {
-                return string.Empty;
-            }
-
-            return ImplodeExtracted(separator ?? string.Empty, array, arrayIndex, array.Length - arrayIndex);
-        }
-
-        public static string Implode(string separator, string[] array, int arrayIndex, int countLimit)
-        {
-            if (array == null)
-            {
-                throw new ArgumentNullException(nameof(array));
-            }
-
-            if (arrayIndex < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Non-negative number is required.");
-            }
-
-            if (countLimit < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(countLimit), "Non-negative number is required.");
-            }
-
-            if (countLimit > array.Length - arrayIndex)
-            {
-                throw new ArgumentException("The array can not contain the number of elements.", nameof(array));
-            }
-
-            if (arrayIndex == array.Length)
-            {
-                return string.Empty;
-            }
-
-            return ImplodeExtracted(separator ?? string.Empty, array, arrayIndex, countLimit);
-        }
-
-        private static string ImplodeExtracted(string separator, object[] array, int startIndex, int count)
-        {
-            var length = 0;
-            var maxIndex = startIndex + count;
-            var newArray = new string[count];
-            for (var index = startIndex; index < maxIndex; index++)
-            {
-                var item = array[index];
-
-                var itemToString = item?.ToString();
-                if (itemToString == null)
+                if (array == null)
                 {
-                    continue;
+                    throw new ArgumentNullException(nameof(array));
                 }
 
-                newArray[index - startIndex] = itemToString;
-                length += itemToString.Length;
-            }
-
-            length += separator.Length * (count - 1);
-            return ImplodeExtractedExtracted(separator, newArray, 0, count, length);
-        }
-
-        private static string ImplodeExtracted(string separator, string?[] array, int startIndex, int count)
-        {
-            var length = 0;
-            var maxIndex = startIndex + count;
-            for (var index = startIndex; index < maxIndex; index++)
-            {
-                var item = array[index];
-                if (item is null)
+                if (arrayIndex < 0)
                 {
-                    continue;
+                    throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Non-negative number is required.");
                 }
 
-                length += item.Length;
+                return arrayIndex == array.Length ? string.Empty : ConcatExtracted(array, arrayIndex, array.Length - arrayIndex);
             }
 
-            length += separator.Length * (count - 1);
-            return ImplodeExtractedExtracted(separator, array, startIndex, maxIndex, length);
-        }
-
-        private static string ImplodeExtractedExtracted(string separator, string?[] array, int startIndex, int maxIndex, int length)
-        {
-            if (length <= 0)
+            public static string Concat(string[] array, int arrayIndex, int countLimit)
             {
-                return string.Empty;
-            }
-
-            var result = new StringBuilder(length);
-            var first = true;
-            for (var index = startIndex; index < maxIndex; index++)
-            {
-                var item = array[index];
-                if (first)
+                if (array == null)
                 {
-                    first = false;
-                }
-                else
-                {
-                    result.Append(separator);
+                    throw new ArgumentNullException(nameof(array));
                 }
 
-                result.Append(item);
+                if (arrayIndex < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Non-negative number is required.");
+                }
+
+                if (countLimit < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(countLimit), "Non-negative number is required.");
+                }
+
+                if (countLimit > array.Length - arrayIndex)
+                {
+                    throw new ArgumentException("startIndex plus countLimit is greater than the number of elements in array.", nameof(array));
+                }
+
+                return arrayIndex == array.Length ? string.Empty : ConcatExtracted(array, arrayIndex, countLimit);
             }
 
-            return result.ToString();
+            private static string ConcatExtracted(object[] array, int startIndex, int count)
+            {
+                var length = 0;
+                var maxIndex = startIndex + count;
+                var newArray = new string[count];
+                for (var index = startIndex; index < maxIndex; index++)
+                {
+                    var item = array[index];
+
+                    var itemToString = item?.ToString();
+                    if (itemToString == null)
+                    {
+                        continue;
+                    }
+
+                    newArray[index - startIndex] = itemToString;
+                    length += itemToString.Length;
+                }
+
+                return ConcatExtractedExtracted(newArray, 0, count, length);
+            }
+
+            private static string ConcatExtracted(string[] array, int startIndex, int count)
+            {
+                var length = 0;
+                var maxIndex = startIndex + count;
+                for (var index = startIndex; index < maxIndex; index++)
+                {
+                    var item = array[index];
+                    if (item is null)
+                    {
+                        continue;
+                    }
+
+                    length += item.Length;
+                }
+
+                return ConcatExtractedExtracted(array, startIndex, maxIndex, length);
+            }
+
+            private static string ConcatExtractedExtracted(string[] array, int startIndex, int maxIndex, int length)
+            {
+                if (length <= 0)
+                {
+                    return string.Empty;
+                }
+
+                var result = new StringBuilder(length);
+                for (var index = startIndex; index < maxIndex; index++)
+                {
+                    var item = array[index];
+                    result.Append(item);
+                }
+
+                return result.ToString();
+            }
         }
     }
 
     public static partial class StringEx
     {
-        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-        public static bool IsNullOrWhiteSpace(string value)
+        extension(string)
         {
-#if LESSTHAN_NET40
-            //Added in .NET 4.0
-            if (string.IsNullOrEmpty(value))
+            public static string Implode(string separator, IEnumerable<string> values)
             {
-                return true;
-            }
-
-            foreach (var character in value)
-            {
-                if (!char.IsWhiteSpace(character))
+                if (values == null)
                 {
-                    return false;
+                    throw new ArgumentNullException(nameof(values));
                 }
+
+                if (separator == null)
+                {
+                    return Concat(values);
+                }
+
+                var stringList = values.ToList();
+                return ImplodeExtracted(separator, stringList.ToArray(), 0, stringList.Count);
             }
 
-            return true;
+            public static string Implode(string separator, IEnumerable<string> values, string start, string end)
+            {
+                if (values == null)
+                {
+                    throw new ArgumentNullException(nameof(values));
+                }
+
+                if (separator == null)
+                {
+                    return Concat(values);
+                }
+
+                var stringList = values.ToList();
+
+                if (stringList.Count == 0)
+                {
+                    return string.Empty;
+                }
+
+                start ??= string.Empty;
+                end ??= string.Empty;
+                return start + ImplodeExtracted(separator, stringList.ToArray(), 0, stringList.Count) + end;
+            }
+
+            public static string Implode<T>(string separator, IEnumerable<T> values)
+            {
+                if (values == null)
+                {
+                    throw new ArgumentNullException(nameof(values));
+                }
+
+                if (separator == null)
+                {
+                    return Concat(values);
+                }
+
+                var stringList = values.Select(item => item?.ToString()).ToList();
+                return ImplodeExtracted(separator, stringList.ToArray(), 0, stringList.Count);
+            }
+
+            public static string Implode<T>(string separator, IEnumerable<T> values, Func<T, string> converter)
+            {
+                if (converter == null)
+                {
+                    throw new ArgumentNullException(nameof(converter));
+                }
+
+                if (values == null)
+                {
+                    throw new ArgumentNullException(nameof(values));
+                }
+
+                if (separator == null)
+                {
+                    return Concat(values, converter);
+                }
+
+                var stringList = values.Select(item => item?.ToString()).ToList();
+                return ImplodeExtracted(separator, stringList.ToArray(), 0, stringList.Count);
+            }
+
+            public static string Implode<T>(string separator, IEnumerable<T> values, Func<T, string> converter, string start, string end)
+            {
+                if (converter == null)
+                {
+                    throw new ArgumentNullException(nameof(converter));
+                }
+
+                if (values == null)
+                {
+                    throw new ArgumentNullException(nameof(values));
+                }
+
+                if (separator == null)
+                {
+                    return Concat(values, converter);
+                }
+
+                var stringList = values.Select(item => item?.ToString()).ToList();
+
+                if (stringList.Count == 0)
+                {
+                    return string.Empty;
+                }
+
+                start ??= string.Empty;
+                end ??= string.Empty;
+                return start + ImplodeExtracted(separator, stringList.ToArray(), 0, stringList.Count) + end;
+            }
+
+            public static string Implode<T>(string separator, IEnumerable<T> values, string start, string end)
+            {
+                if (values == null)
+                {
+                    throw new ArgumentNullException(nameof(values));
+                }
+
+                if (separator == null)
+                {
+                    return Concat(values);
+                }
+
+                var stringList = values.Select(item => item?.ToString()).ToList();
+
+                if (stringList.Count == 0)
+                {
+                    return string.Empty;
+                }
+
+                start ??= string.Empty;
+                end ??= string.Empty;
+                return start + ImplodeExtracted(separator, stringList.ToArray(), 0, stringList.Count) + end;
+            }
+
+            public static string Implode(string separator, object[] array, int arrayIndex)
+            {
+                if (array == null)
+                {
+                    throw new ArgumentNullException(nameof(array));
+                }
+
+                if (arrayIndex < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Non-negative number is required.");
+                }
+
+                if (arrayIndex == array.Length)
+                {
+                    return string.Empty;
+                }
+
+                return ImplodeExtracted(separator ?? string.Empty, array, arrayIndex, array.Length - arrayIndex);
+            }
+
+            public static string Implode(string separator, object[] array, int arrayIndex, int countLimit)
+            {
+                if (array == null)
+                {
+                    throw new ArgumentNullException(nameof(array));
+                }
+
+                if (arrayIndex < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Non-negative number is required.");
+                }
+
+                if (countLimit < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(countLimit), "Non-negative number is required.");
+                }
+
+                if (countLimit > array.Length - arrayIndex)
+                {
+                    throw new ArgumentException("The array can not contain the number of elements.", nameof(array));
+                }
+
+                if (arrayIndex == array.Length)
+                {
+                    return string.Empty;
+                }
+
+                return ImplodeExtracted(separator ?? string.Empty, array, arrayIndex, countLimit);
+            }
+
+            public static string Implode(string separator, params object[] values)
+            {
+                if (separator == null)
+                {
+                    return string.Concat(values);
+                }
+
+                if (values == null)
+                {
+                    throw new ArgumentNullException(nameof(values));
+                }
+
+                var array = new string?[values.Length];
+                var index = 0;
+                foreach (var item in values)
+                {
+                    array[index++] = item?.ToString();
+                }
+
+                return ImplodeExtracted(separator, array, 0, array.Length);
+            }
+
+            public static string Implode(string separator, params string[] value)
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+
+                return ImplodeExtracted(separator ?? string.Empty, value, 0, value.Length);
+            }
+
+            public static string Implode(string separator, string[] array, int arrayIndex)
+            {
+                if (array == null)
+                {
+                    throw new ArgumentNullException(nameof(array));
+                }
+
+                if (arrayIndex < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Non-negative number is required.");
+                }
+
+                if (arrayIndex == array.Length)
+                {
+                    return string.Empty;
+                }
+
+                return ImplodeExtracted(separator ?? string.Empty, array, arrayIndex, array.Length - arrayIndex);
+            }
+
+            public static string Implode(string separator, string[] array, int arrayIndex, int countLimit)
+            {
+                if (array == null)
+                {
+                    throw new ArgumentNullException(nameof(array));
+                }
+
+                if (arrayIndex < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Non-negative number is required.");
+                }
+
+                if (countLimit < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(countLimit), "Non-negative number is required.");
+                }
+
+                if (countLimit > array.Length - arrayIndex)
+                {
+                    throw new ArgumentException("The array can not contain the number of elements.", nameof(array));
+                }
+
+                if (arrayIndex == array.Length)
+                {
+                    return string.Empty;
+                }
+
+                return ImplodeExtracted(separator ?? string.Empty, array, arrayIndex, countLimit);
+            }
+
+            private static string ImplodeExtracted(string separator, object[] array, int startIndex, int count)
+            {
+                var length = 0;
+                var maxIndex = startIndex + count;
+                var newArray = new string[count];
+                for (var index = startIndex; index < maxIndex; index++)
+                {
+                    var item = array[index];
+
+                    var itemToString = item?.ToString();
+                    if (itemToString == null)
+                    {
+                        continue;
+                    }
+
+                    newArray[index - startIndex] = itemToString;
+                    length += itemToString.Length;
+                }
+
+                length += separator.Length * (count - 1);
+                return ImplodeExtractedExtracted(separator, newArray, 0, count, length);
+            }
+
+            private static string ImplodeExtracted(string separator, string?[] array, int startIndex, int count)
+            {
+                var length = 0;
+                var maxIndex = startIndex + count;
+                for (var index = startIndex; index < maxIndex; index++)
+                {
+                    var item = array[index];
+                    if (item is null)
+                    {
+                        continue;
+                    }
+
+                    length += item.Length;
+                }
+
+                length += separator.Length * (count - 1);
+                return ImplodeExtractedExtracted(separator, array, startIndex, maxIndex, length);
+            }
+
+            private static string ImplodeExtractedExtracted(string separator, string?[] array, int startIndex, int maxIndex, int length)
+            {
+                if (length <= 0)
+                {
+                    return string.Empty;
+                }
+
+                var result = new StringBuilder(length);
+                var first = true;
+                for (var index = startIndex; index < maxIndex; index++)
+                {
+                    var item = array[index];
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        result.Append(separator);
+                    }
+
+                    result.Append(item);
+                }
+
+                return result.ToString();
+            }
+        }
+    }
+
+    public static partial class StringEx
+    {
+        extension(string)
+        {
+
+            [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+            public static bool IsNullOrWhiteSpace(string value)
+            {
+#if LESSTHAN_NET40
+                //Added in .NET 4.0
+                if (string.IsNullOrEmpty(value))
+                {
+                    return true;
+                }
+
+                foreach (var character in value)
+                {
+                    if (!char.IsWhiteSpace(character))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
 #else
             return string.IsNullOrWhiteSpace(value);
 #endif
+            }
         }
     }
 }
